@@ -1,10 +1,9 @@
 # dips.py Image Processing Functions in opencv #
 # Authors: Timothy Do, Matthew Prata, Jorge Radge, Alex Wang
 
+# Importing Libraries 
 import cv2
 import os
-
-
 
 #Converts the Image to Grayscale and Writes to It
 def grayscale(sourcePath,destPath):
@@ -16,4 +15,12 @@ def grayscaleFolder(source,dest):
 	for file in os.listdir(source):
 		isPicture = file.endswith(".jpg") or file.endswith(".png") or file.endswith(".JPG") or file.endswith(".PNG")
 		if isPicture == True:
-			grayscale(source+file,dest+file)
+			grayscale(source + file, dest + file)	
+
+# Renames an entire Folder of Images to Feed into TF Model
+def renameImages(path):
+	#Copies into Unique names
+	
+	for i, image in enumerate(os.listdir(path)): # enumerate so we can add numbers to file name 
+		os.rename(path + image, path + "photo" + str(i) + ".jpg")
+
