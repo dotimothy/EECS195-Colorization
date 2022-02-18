@@ -17,10 +17,14 @@ def grayscaleFolder(source,dest):
 		if isPicture == True:
 			grayscale(source + file, dest + file)	
 
-# Renames an entire Folder of Images to Feed into TF Model
+# Renames an entire Folder of JPG Images to Feed into TF Model
 def renameImages(path):
 	#Copies into Unique names
-	
 	for i, image in enumerate(os.listdir(path)): # enumerate so we can add numbers to file name 
-		os.rename(path + image, path + "photo" + str(i) + ".jpg")
+		oldname, ext = os.path.splitext(image)
+		os.rename(path + image, path + "photo" + str(i) + ext)
 
+#Prepare a Folder of Images to Train with the Data (path is the image where image dataset is located)
+def prepareImageSet(path):
+	#Rename all Images in Folders First
+	renameImages(path)
