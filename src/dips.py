@@ -17,6 +17,21 @@ def grayscaleFolder(source,dest):
 		if isPicture == True:
 			grayscale(source + file, dest + file)	
 
+# Downscales an Image using openCV
+def downScaleImage(sourcePath,destPath):
+	image = cv2.imread(sourcePath)
+	dim = image.shape
+	ar = dim[0]/dim[1]
+	cv2.imwrite(destPath,cv2.resize(image,(224,round(ar*224))))
+
+# Downscales an Entire Folder
+def downScaleFolder(source,dest):
+	# Loops through directory for images
+	for file in os.listdir(source):
+		isPicture = file.endswith(".jpg") or file.endswith(".png") or file.endswith(".JPG") or file.endswith(".PNG")
+		if isPicture == True:
+			downScaleImage(source + file, dest + file)	
+
 # Renames an entire Folder of JPG Images to Feed into TF Model
 def renameImages(path):
 	#Copies into Unique names
@@ -28,3 +43,7 @@ def renameImages(path):
 def prepareImageSet(path):
 	#Rename all Images in Folders First
 	renameImages(path)
+
+
+
+

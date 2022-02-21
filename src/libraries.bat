@@ -1,6 +1,6 @@
 pip install opencv-python
 pip install --upgrade pyqt5 lxml
-pip install tensorflow --upgrade
+pip install tensorflow==2.7.0 tensorflow-gpu==2.7.0
 pip install tensorflowjs 
 pip install Pillow 
 pip install protobuf matplotlib==3.2
