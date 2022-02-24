@@ -20,6 +20,6 @@ val = os.getcwd() + "\\val\\"
 
 # Start test
 start = time.time()
-dips.prepareImageSet(input,gray,train,val,0.5)
+#dips.prepareImageSet(input,gray,train,val,0.5)
 duration = time.time() - start
 print("Total Time: " +  str(duration) + " seconds")

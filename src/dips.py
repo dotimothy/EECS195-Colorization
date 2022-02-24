@@ -24,7 +24,7 @@ def downScaleImage(sourcePath,destPath):
 	image = cv2.imread(sourcePath)
 	dim = image.shape
 	ar = dim[0]/dim[1]
-	res = 480
+	res = 224
 	cv2.imwrite(destPath,cv2.resize(image,(res,round(ar*res))))
 
 # Downscales an Entire Folder
@@ -87,7 +87,7 @@ def prepareImageSet(inputPath,grayPath,trainPath,valPath,traintoVal):
 	for file in os.listdir(inputPath):
 		# Training
 		move = trainPath
-		if(i > round(imageNumber*traintoVal)):
+		if(i > round(imageNumber*traintoVal)): #Validation
 			move = valPath 
 		os.rename(inputPath + file,move + "\\color\\" + file)
 		os.rename(grayPath + file,move + "\\gray\\" + file)
