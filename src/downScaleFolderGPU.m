@@ -3,7 +3,7 @@
 function downScaleFolderGPU(sourceName,destName)
 images = [dir(sourceName + "/*.JPG");dir(sourceName + "/*.png")];
 [r,c,d] = size(imread(sourceName + "\" + images(1).name));
-blockSize = 1;
+blockSize = 5;
 for k = 1:length(images)/blockSize
     set = zeros(r,c,d,blockSize);
     set = uint8(set); 

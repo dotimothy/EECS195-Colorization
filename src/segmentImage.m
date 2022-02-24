@@ -2,7 +2,7 @@
 % Gets Average of Superpixels %
 function segmentImage(sourceName,destName)
     image = imread(sourceName);
-    [L,N] = superpixels(image,10000);
+    [L,N] = superpixels(image,2000);
     outputImage = zeros(size(image),'like',image);
     idx = label2idx(L);
     numRows = size(image,1);

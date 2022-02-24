@@ -6,6 +6,8 @@ for i = 1:length(images)
     destPath = destName + "\" + images(i).name;
     tic
     segmentImage(sourcePath,destPath);
-    toc
+    duration = toc;
+    disp("Image (" + string(i) + "/" + string(length(images)) + ") Segmented in " + string(duration) + " s");
 end
+
 end
