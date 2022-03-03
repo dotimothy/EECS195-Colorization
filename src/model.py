@@ -10,6 +10,7 @@ from keras.models import Sequential, Model, load_model
 import os
 from matplotlib.image import imread
 from keras.applications.vgg16 import VGG16
+from time import time
 
 
 #set image directory and dimensions to feed into network
@@ -51,32 +52,30 @@ decoder_output = Conv2D(16, (3,3), activation='relu', padding='same')(decoder_ou
 decoder_output = Conv2D(2, (3, 3), activation='tanh', padding='same')(decoder_output)
 decoder_output = UpSampling2D((2, 2))(decoder_output)
 
-#model = Model(inputs=encoder_input,outputs=decoder_output)
+model = Model(inputs=encoder_input,outputs=decoder_output)
 
 # VGG16 Test Model
-model = tf.keras.applications.VGG16(
-    include_top=False,
-    input_shape=(img_width, img_height, 3),
-    pooling='max',
-    classes=2,
-    classifier_activation='softmax',
-)
+# model = tf.keras.applications.VGG16(
+#     include_top=False,
+#     input_shape=(img_width, img_height, 3),
+#     pooling='max',
+#     classes=2,
+#     classifier_activation='softmax',
+# )
 
-flat = keras.layers.Flatten()(model.layers[-1].output)
-class1 = keras.layers.Dense(1024, activation='relu')(flat)
-output = keras.layers.Dense(2, activation='sigmoid')(class1)
-model = Model(inputs=model.inputs, outputs=output)
+# flat = keras.layers.Flatten()(model.layers[-1].output)
+# class1 = keras.layers.Dense(1024, activation='relu')(flat)
+# output = keras.layers.Dense(2, activation='sigmoid')(class1)
+# model = Model(inputs=model.inputs, outputs=output)
 
-if(not os.path.exists("testmodel.h5")):
+start = time()
+if(not os.path.exists("testmodel.h5") or 1):
     model.compile(optimizer='rmsprop', loss='mse')
-    model.fit(traindata,validation_data=testdata,epochs=5)
+    #model.fit(traindata,validation_data=testdata,epochs=5)
     model.summary()
     model.save("testmodel.h5")
 else:
     model = load_model('testmodel.h5')
+print("Trained in " + str(time() - start) + " s")
 
-model.predict(imread("photo0.JPG"))
-
-
-
-
+#model.predict(imread("photo0.JPG"))

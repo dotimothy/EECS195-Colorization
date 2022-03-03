@@ -5,7 +5,7 @@ import time
 import os
 	
 # Directories
-sourceName = os.getcwd() + "\\seg\\"
+sourceName = os.getcwd() + "\\color\\"
 altName = os.getcwd() + "\\seg1\\"
 destName = os.getcwd() + "\\gray\\"
 altDestName = os.getcwd() + "\\gray1\\"
@@ -21,5 +21,6 @@ val = os.getcwd() + "\\val\\"
 # Start test
 start = time.time()
 #dips.prepareImageSet(input,gray,train,val,0.5)
+dips.grayscaleFolder(sourceName,destName)
 duration = time.time() - start
 print("Total Time: " +  str(duration) + " seconds")
