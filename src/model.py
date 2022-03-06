@@ -2,12 +2,15 @@ import numpy as np
 import os
 from tensorflow.keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
 import tensorflow as tf
+from keras import *
 from keras.layers import *
+from keras.models import *
+import matplotlib.pyplot as plt
 import os
 
 
-IMG_WIDTH =  200    
-IMG_HEIGHT = 200
+IMG_WIDTH =  224    
+IMG_HEIGHT = 224
 batch_size = 1
 
 train_dir = os.getcwd() + "\\train\\"
@@ -25,9 +28,7 @@ train_data_gen = image_gen_train.flow_from_directory(batch_size=batch_size,direc
 shuffle=True,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
 val_data_gen = image_gen_val.flow_from_directory(batch_size=batch_size,
 directory=val_dir,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
-model=tf.keras.Sequential(
-        [
-            InputLayer(input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+layers = [  InputLayer(input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
             Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
             Conv2D(filters=64, kernel_size=3, strides= 2, activation='relu'),
             Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
@@ -55,18 +56,23 @@ model=tf.keras.Sequential(
             Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
             Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
             UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
-            
-            
-            
-            
-            Flatten()
-            
-            
-         ])
-#Compile the model
-model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',
-metrics=['accuracy'])
-#Fitting the model
-history = model.fit(train_data_gen,steps_per_epoch=len(train_data_gen)//batch_size, validation_data=val_data_gen, epochs=20)
-model.save('model.h5')
+
+            Flatten()  
+         ]
+model=tf.keras.Sequential(layers)
+
+mod = 'model.h5'
+if(not os.path.exists(mod)):
+    #Compile the model
+    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',
+    metrics=['accuracy'])
+    #Fitting the model
+    history = model.fit(train_data_gen,steps_per_epoch=len(train_data_gen)//batch_size, validation_data=val_data_gen, epochs=20)
+    model.save(mod)
+else: 
+    model = load_model(mod)
 model.summary()
+img, label = train_data_gen.next()
+image = model.predict(img)
+plt.imshow(image)
+plt.show()
