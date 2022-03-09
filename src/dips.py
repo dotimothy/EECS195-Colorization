@@ -56,7 +56,7 @@ def img2lab(path):
     img = cv2.imread(path)
     lab = cv2.cvtColor(img, cv2.COLOR_BGR2LAB)
 	# normalization from 0 to 100 
-    return ((lab / [100, 1, 1]) * [255, 1, 1]) - [0, 128, 128]
+    return lab
 
 # Creating Folder with 313 Classes
 # DEPRECATEAD
@@ -80,8 +80,8 @@ def setToLab(path):
 			ab = lab[:,:,1:2]
 			np_L.append(L)
 			np_ab.append(ab)
-	np.save(path + 'l.npy',np_L)
-	np.save(path + 'ab.npy',np_ab)	
+	np.save(path + 'l_in.npy',np_L)
+	np.save(path + 'ab_in.npy',np_ab)	
 
 # Converts an Image into LAB format, then saves it as a numpy array
 
@@ -109,7 +109,7 @@ def prepareImageSet(inputPath):
 	
 	#Segment all Images in Matlab
 	print("------ MATLAB Segmenting Images ------")
-	os.system("matlab -nodesktop -nosplash -batch \"segmentFolder '" + inputPath + "' '" + inputPath + "' \"")
+	#os.system("matlab -nodesktop -nosplash -batch \"segmentFolder '" + inputPath + "' '" + inputPath + "' \"")
 	print("------ Matlab Segmenting Complete ------")
 	current = time.time()
 	print("Segmenting Images: " + str(current-prev) + " s")
@@ -118,7 +118,7 @@ def prepareImageSet(inputPath):
 	
 	current = time.time()
 	setToLab(inputPath)
-	print("Image Set to Numpy Folders: " + str(current-prev) + " s")
+	print("Image Set to Numpy Arrays: " + str(current-prev) + " s")
 	prev = current
 		
 			

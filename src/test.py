@@ -14,12 +14,12 @@ from model import auto_encoder, stopper, checkpoints
 import warnings
 warnings.filterwarnings("ignore")
 
-gray = np.load(os.getcwd() + "\\gray_scale.npy")
-color = np.load(os.getcwd() + "\\ab1.npy")
+gray = np.load(os.getcwd() + "\\l_in.npy")
+color = np.load(os.getcwd() + "\\ab_in.npy")
 
 
-splitting_count = 500
-end_splitting_count = 1000
+splitting_count = 100
+end_splitting_count = 200
 
 x_train = gray[:splitting_count, :, :].astype("float32").reshape(splitting_count, gray.shape[1], gray.shape[2])
 
@@ -27,6 +27,7 @@ y_train = color[:splitting_count, :, :].astype("float32")
 
 x_test = gray[splitting_count:end_splitting_count, :, :].astype("float32").reshape(splitting_count, gray.shape[1], gray.shape[2])
 
+# Stacks Gray Images 
 def line_image(gray_images,splitting_count=splitting_count):
     zeros = np.zeros((splitting_count, 224, 224, 3))
     for i in range(0,3):
@@ -65,12 +66,13 @@ if(os.path.exists('model.h5') and False):
 else:
     auto_encoder.compile(loss = compile_loss, optimizer= compile_optimizer, metrics = compile_metrics)
     auto_encoder.summary
-    auto_encoder_model = auto_encoder.fit(input_images, output_images, epochs = 100, callbacks = [stopper, checkpoints], batch_size = 4)
+    auto_encoder_model = auto_encoder.fit(input_images, output_images, epochs = 100, callbacks = [stopper, checkpoints], batch_size = 2)
     auto_encoder.save('model.h5')
     
 predictions = auto_encoder.predict(input_images)
 test_predictions = auto_encoder.predict(test_input)
 
+# conv: True if Convert, False if Not
 def write_imgs(imgs, path, conv):
     if(not os.path.exists(path)):
         os.makedirs(path)
