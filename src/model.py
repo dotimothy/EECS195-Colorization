@@ -1,78 +1,48 @@
-import numpy as np
-import os
-from tensorflow.keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
 import tensorflow as tf
-from keras import *
+from tensorflow.keras.optimizers import RMSprop,Adam,Optimizer,Optimizer, SGD
+from tensorflow import keras
 from keras.layers import *
-from keras.models import *
-import matplotlib.pyplot as plt
+from keras import Sequential
+from keras.models import load_model
 import os
 
+Early_Stopper = tf.keras.callbacks.EarlyStopping(monitor = "loss", patience = 3, mode = "min")
+Checkpoint_Model = tf.keras.callbacks.ModelCheckpoint(monitor = "val_accuracy",
+                                                      save_best_only = True,
+                                                      save_weights_only = True,
+                                                      filepath = os.getcwd() + "./modelcheck")
+encoder = Sequential()
+encoder.add(Conv2D(filters = 64, kernel_size = 2 , padding = "same", use_bias = True, strides = 1))
+# encoder.add(Conv2D(filters = 64, kernel_size = 2 , padding = "same", use_bias = True, strides = 1))
+# encoder.add(Conv2D(filters = 64, kernel_size = 2 , padding = "same", use_bias = True, strides = 1))
+encoder.add(BatchNormalization())
+encoder.add(ReLU())
 
-IMG_WIDTH =  224    
-IMG_HEIGHT = 224
-batch_size = 1
+encoder.add(Conv2D(64, kernel_size = 2, padding = "same", use_bias = True))
+encoder.add(BatchNormalization())
+encoder.add(ReLU())
 
-train_dir = os.getcwd() + "\\train\\"
-val_dir   = os.getcwd() +  "\\val\\"
+encoder.add(Conv2D(128, kernel_size = 2, padding = "same", use_bias = True))
+encoder.add(BatchNormalization())
+encoder.add(ReLU())
 
-image_gen_train = ImageDataGenerator(rescale=1./255, 
-                                     zoom_range=0.2, 
-                                     rotation_range=65,
-                                     shear_range=0.09,
-                                     horizontal_flip=True,
-                                     vertical_flip=True)
-image_gen_val = ImageDataGenerator(rescale=1./255)
+encoder.add(Conv2D(256, kernel_size = 2, padding = "same", use_bias = True))
+encoder.add(BatchNormalization())
+encoder.add(ReLU())
 
-train_data_gen = image_gen_train.flow_from_directory(batch_size=batch_size,directory=train_dir,
-shuffle=True,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
-val_data_gen = image_gen_val.flow_from_directory(batch_size=batch_size,
-directory=val_dir,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
-layers = [  InputLayer(input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
-            Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=64, kernel_size=3, strides= 2, activation='relu'),
-            Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
-            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
-            
-            
-            Conv2D(filters=128, kernel_size=3, strides= 2, activation='relu'),
-            Conv2D(filters=128, kernel_size=3, strides= 1, activation='relu'),
-            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
-            
-            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
-            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
-            
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
-            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
 
-            Flatten()  
-         ]
-model=tf.keras.Sequential(layers)
+decoder = Sequential()
+decoder.add(Conv2DTranspose(128, kernel_size = 2, padding = "same", use_bias = True))
+decoder.add(ReLU())
 
-mod = 'model.h5'
-if(not os.path.exists(mod)):
-    #Compile the model
-    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',
-    metrics=['accuracy'])
-    #Fitting the model
-    history = model.fit(train_data_gen,steps_per_epoch=len(train_data_gen)//batch_size, validation_data=val_data_gen, epochs=20)
-    model.save(mod)
-else: 
-    model = load_model(mod)
-model.summary()
-img, label = train_data_gen.next()
-image = model.predict(img)
-plt.imshow(image)
-plt.show()
+decoder.add(Conv2DTranspose(64, kernel_size = 2, padding = "same", use_bias = True))
+
+decoder.add(ReLU())
+
+decoder.add(Conv2DTranspose(32, kernel_size = 2, padding = "same", use_bias = True))
+decoder.add(ReLU())
+
+decoder.add(Conv2DTranspose(3, kernel_size = 2, padding = "same", use_bias = True))
+decoder.add(ReLU())
+
+auto_encoder = Sequential([encoder, decoder])
