@@ -6,8 +6,8 @@ from keras import Sequential
 from keras.models import load_model
 import os
 
-Early_Stopper = tf.keras.callbacks.EarlyStopping(monitor = "loss", patience = 3, mode = "min")
-Checkpoint_Model = tf.keras.callbacks.ModelCheckpoint(monitor = "val_accuracy",
+stopper = tf.keras.callbacks.EarlyStopping(monitor = "loss", patience = 3, mode = "min")
+checkpoints = tf.keras.callbacks.ModelCheckpoint(monitor = "val_accuracy",
                                                       save_best_only = True,
                                                       save_weights_only = True,
                                                       filepath = os.getcwd() + "./modelcheck")

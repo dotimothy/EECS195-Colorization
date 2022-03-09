@@ -10,7 +10,7 @@ from keras.models import load_model
 import matplotlib.pyplot as plt
 from skimage.color import lab2rgb, rgb2lab
 from PIL import Image
-from model import Auto_Encoder, Early_Stopper, Checkpoint_Model
+from model import auto_encoder, stopper, checkpoints
 import warnings
 warnings.filterwarnings("ignore")
 
