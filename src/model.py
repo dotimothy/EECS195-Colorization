@@ -1,81 +1,78 @@
-# model.py Model generated using keras and tensorflow #
-# Authors: Timothy Do, Matthew Prata, Jorge Radge, Alex Wang
-from pyexpat import model
-from re import S
-import tensorflow as tf
-from tensorflow import keras
-from keras.preprocessing.image import ImageDataGenerator
-from keras.layers import Conv2D, UpSampling2D, InputLayer, Conv2DTranspose, Input, Reshape, merge, concatenate
-from keras.models import Sequential, Model, load_model
+import numpy as np
 import os
-from matplotlib.image import imread
-from keras.applications.vgg16 import VGG16
-from time import time
+from tensorflow.keras.preprocessing.image import ImageDataGenerator, img_to_array, load_img, array_to_img
+import tensorflow as tf
+from keras import *
+from keras.layers import *
+from keras.models import *
+import matplotlib.pyplot as plt
+import os
 
 
-#set image directory and dimensions to feed into network
-train_data_dir = os.getcwd() + '\\' + 'train'
-val_data_dir = os.getcwd() + '\\' + 'val'
-img_width, img_height = 224,224
+IMG_WIDTH =  224    
+IMG_HEIGHT = 224
+batch_size = 1
 
-#remove horizontal_flip if overtraining
-train_datagen = ImageDataGenerator(shear_range = .2, zoom_range = .2, rotation_range = 20, horizontal_flip = True)
-test_datagen = ImageDataGenerator()
-traindata = train_datagen.flow_from_directory(directory=train_data_dir, target_size=(img_width, img_height))
-testdata =  test_datagen.flow_from_directory(directory=val_data_dir, target_size=(img_width, img_height))
+train_dir = os.getcwd() + "\\train\\"
+val_dir   = os.getcwd() +  "\\val\\"
 
-#input shape first entry may be varied depending on our results, higher batch sizes might realize better results
+image_gen_train = ImageDataGenerator(rescale=1./255, 
+                                     zoom_range=0.2, 
+                                     rotation_range=65,
+                                     shear_range=0.09,
+                                     horizontal_flip=True,
+                                     vertical_flip=True)
+image_gen_val = ImageDataGenerator(rescale=1./255)
 
-#start actual model
-#convolutional layers
-encoder_input = Input(shape=(256, 256, 1,))
-encoder_output = Conv2D(64, (3,3), activation='relu', padding='same', strides=2)(encoder_input)
-encoder_output = Conv2D(128, (3,3), activation='relu', padding='same')(encoder_output)
-#encoder_output = Conv2D(128, (3,3), activation='relu', padding='same', strides=2)(encoder_output)
-#encoder_output = BatchNormalization()(encoder_output)
+train_data_gen = image_gen_train.flow_from_directory(batch_size=batch_size,directory=train_dir,
+shuffle=True,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
+val_data_gen = image_gen_val.flow_from_directory(batch_size=batch_size,
+directory=val_dir,target_size=(IMG_HEIGHT, IMG_WIDTH),class_mode='sparse')
+layers = [  InputLayer(input_shape=(IMG_WIDTH, IMG_HEIGHT, 3)),
+            Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=64, kernel_size=3, strides= 2, activation='relu'),
+            Conv2D(filters=64, kernel_size=3, strides= 1, activation='relu'),
+            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
+            
+            
+            Conv2D(filters=128, kernel_size=3, strides= 2, activation='relu'),
+            Conv2D(filters=128, kernel_size=3, strides= 1, activation='relu'),
+            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
+            
+            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=256, kernel_size=3, strides= 1, activation='relu'),
+            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
+            
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            Conv2D(filters=512, kernel_size=3, strides= 1, activation='relu'),
+            UpSampling2D(data_format = 'channels_first', interpolation = 'bilinear'),
 
-encoder_output1 = Conv2D(256, (3,3), activation='relu', padding='same')(encoder_output)
-#encoder_output1 = Conv2D(256, (3,3), activation='relu', padding='same', strides=2)(encoder_output1)
-#encoder_output1 = Conv2D(512, (3,3), activation='relu', padding='same')(encoder_output1)
+            Flatten()  
+         ]
+model=tf.keras.Sequential(layers)
 
-encoder_output2 = Conv2D(512, (3,3), activation='relu', padding='same')(encoder_output1)
-encoder_output2 = Conv2D(256, (3,3), activation='relu', padding='same')(encoder_output2)
-
-#Decoder
-#reshape this first block
-decoder_output = Conv2D(128, (3,3), activation='relu', padding='same')(encoder_output2)
-decoder_output = UpSampling2D((2, 2))(decoder_output)
-decoder_output = Conv2D(64, (3,3), activation='relu', padding='same')(decoder_output)
-decoder_output = UpSampling2D((2, 2))(decoder_output)
-decoder_output = Conv2D(32, (3,3), activation='relu', padding='same')(decoder_output)
-decoder_output = Conv2D(16, (3,3), activation='relu', padding='same')(decoder_output)
-decoder_output = Conv2D(2, (3, 3), activation='tanh', padding='same')(decoder_output)
-decoder_output = UpSampling2D((2, 2))(decoder_output)
-
-model = Model(inputs=encoder_input,outputs=decoder_output)
-
-# VGG16 Test Model
-# model = tf.keras.applications.VGG16(
-#     include_top=False,
-#     input_shape=(img_width, img_height, 3),
-#     pooling='max',
-#     classes=2,
-#     classifier_activation='softmax',
-# )
-
-# flat = keras.layers.Flatten()(model.layers[-1].output)
-# class1 = keras.layers.Dense(1024, activation='relu')(flat)
-# output = keras.layers.Dense(2, activation='sigmoid')(class1)
-# model = Model(inputs=model.inputs, outputs=output)
-
-start = time()
-if(not os.path.exists("testmodel.h5") or 1):
-    model.compile(optimizer='rmsprop', loss='mse')
-    #model.fit(traindata,validation_data=testdata,epochs=5)
-    model.summary()
-    model.save("testmodel.h5")
-else:
-    model = load_model('testmodel.h5')
-print("Trained in " + str(time() - start) + " s")
-
-#model.predict(imread("photo0.JPG"))
+mod = 'model.h5'
+if(not os.path.exists(mod)):
+    #Compile the model
+    model.compile(optimizer='rmsprop', loss='sparse_categorical_crossentropy',
+    metrics=['accuracy'])
+    #Fitting the model
+    history = model.fit(train_data_gen,steps_per_epoch=len(train_data_gen)//batch_size, validation_data=val_data_gen, epochs=20)
+    model.save(mod)
+else: 
+    model = load_model(mod)
+model.summary()
+img, label = train_data_gen.next()
+image = model.predict(img)
+plt.imshow(image)
+plt.show()
