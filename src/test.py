@@ -1,7 +1,6 @@
 import numpy as np
-import cv2 as cv2
+import cv2
 import os
-from keras.applications.vgg16 import preprocess_input
 import tensorflow as tf
 from tensorflow.keras.optimizers import RMSprop,Adam,Optimizer,Optimizer, SGD
 from tensorflow import keras
@@ -11,7 +10,7 @@ from keras.models import load_model
 import matplotlib.pyplot as plt
 from skimage.color import lab2rgb, rgb2lab
 from PIL import Image
-from autoencoder import Auto_Encoder, Early_Stopper, Checkpoint_Model
+from model import Auto_Encoder, Early_Stopper, Checkpoint_Model
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -49,12 +48,7 @@ def from_lab_to_rgb(gray_images, ab_images, n):
     img = np.array(img)
     return img
 
-
-
 output_images = from_lab_to_rgb(x_train, y_train, n = splitting_count)
-
-im = Image.fromarray(output_images[0])
-im.save('demo.JPG')
 
 gray_zeros = np.zeros((splitting_count,gray.shape[1],gray.shape[2], 1))
 gray_zeros[:,:,:,0] = x_train
@@ -74,7 +68,6 @@ else:
     Auto_Encoder_Model = Auto_Encoder.fit(input_images, output_images, epochs = 100, callbacks = [Early_Stopper, Checkpoint_Model], batch_size = 4)
     Auto_Encoder.save('model.h5')
     
-
 predictions = Auto_Encoder.predict(input_images)
 test_predictions = Auto_Encoder.predict(test_input)
 
