@@ -12,11 +12,15 @@ from skimage.future import graph
 import matplotlib.pyplot as plt
 import argparse
 import cv2
+from torch import threshold
 
 #######Variables 
 maxColorPrediction = maxRedPrediction = maxGreenPrediction = maxBluePrediction = 0
 maxRedTotal = maxGreenTotal = maxBlueTotal = 1
 maxRedThreshold = maxGreenThreshold = maxBlueThreshold = 0
+ThresholdMet = GRAYCount = CVGrayCount = 0
+grayThresh = 20
+Threshold = 50
 def resize_img(img):
 	return resize(img,(256,256))
 def maxChannel(photo):
@@ -28,10 +32,11 @@ def maxChannel(photo):
         return 2
 def thresholdmet(threshold,original,predicted):
     i = maxChannel(original)
-    if (predicted[i] - original[i]) < threshold and (predicted[i] - original[i]) > -threshold:
-         return i
-    else:
-         return -1
+    if (predicted[0] - original[0]) < threshold and (predicted[0] - original[0]) > -threshold:
+        if (predicted[1] - original[1]) < threshold and (predicted[1] - original[1]) > -threshold:
+            if (predicted[2] - original[2]) < threshold and (predicted[2] - original[2]) > -threshold:    
+                return 1
+    return 0
 def CorrectMax(value):
     if(value == 0):
         maxRedPrediction = maxRedPrediction + 1
@@ -39,7 +44,18 @@ def CorrectMax(value):
         maxGreenPrediction = maxGreenPrediction + 1
     if(value == 2):
         maxBluePrediction = maxBluePrediction + 1
-
+def grayScaleMet(grayThresh, original,predicted):
+    averageOG = (original[0] + original[1] + original[2])/3
+    predictedOG = (predicted[0]+ predicted[1]+ predicted[2])/3
+    if(predictedOG > averageOG-grayThresh) and (predictedOG< averageOG+grayThresh):
+        return 1
+    return 0 
+def OPENCVGrayScaleFromula(grayThresh,original,predicted):
+    averageOG = (original[0]*.30 + original[1]*.59 + original[2]*.11)
+    predictedOG = (predicted[0]*.30+ predicted[1]*.59+ predicted[2]*.11)
+    if(predictedOG > averageOG-grayThresh) and (predictedOG< averageOG+grayThresh):
+        return 1
+    return 0 
 
 def _weight_mean_color(graph, src, dst, n):
     diff = graph.nodes[dst]['mean color'] - graph.nodes[n]['mean color']
@@ -51,14 +67,18 @@ def merge_mean_color(graph, src, dst):
     graph.nodes[dst]['mean color'] = (graph.nodes[dst]['total color'] /
                                       graph.nodes[dst]['pixel count'])
 
-OriginalImageName = r'\photo0.jpg' #Name of input image (Needs to be 256x256)  
-PredictedImageName = r'\Lake.jpg_siggraph17.png' #Name of the Predicted Image             
+OriginalImageName = r'\white_rose.jpg' #Name of input image (Needs to be 256x256)  
+PredictedImageName = r'\PredictedWhiteRose.png' #Name of the Predicted Image             
 ColorImage = r"C:\Users\Matthew Prata\Desktop\School\Winter 2022\EECS 195\Project\SquareImages" + OriginalImageName
 PredictedImage = r"C:\Users\Matthew Prata\Desktop\School\Winter 2022\EECS 195\Project\PredictedImages" + PredictedImageName
 #image_color = Image.open(ColorImage)
 image_color = io.imread(ColorImage)
+
 #image_color = resize_img(image_color)
 image_predicted = io.imread(PredictedImage)
+IMAGETEST = Image.open(PredictedImage)
+IMAGETEST = np.asarray(IMAGETEST)
+print(type(IMAGETEST))
 # io.imshow(image_color)
 # io.show()
 
@@ -114,24 +134,28 @@ for x in range(256):
             if(Channel2 == 2):
                 maxBluePrediction = maxBluePrediction + 1
         
-        Check = thresholdmet(256,outRGB,out2RGB)
-        if(Check != -1):
-            if(Check == 0):       
-                maxRedThreshold = maxRedThreshold + 1
-            if(Check == 1):
-                maxGreenThreshold = maxGreenThreshold + 1
-            if(Check == 2):
-                maxBlueThreshold = maxBlueThreshold + 1
+        Check = thresholdmet(Threshold,outRGB,out2RGB)
+        if(Check == 1):
+            ThresholdMet = ThresholdMet + 1
+        GrayScaleCheck = grayScaleMet(grayThresh,outRGB,out2RGB)
+        if(GrayScaleCheck == 1):
+            GRAYCount = GRAYCount + 1
+        CVGrayScaleCheck = OPENCVGrayScaleFromula(grayThresh,outRGB,out2RGB)
+        if(CVGrayScaleCheck == 1):
+            CVGrayCount = CVGrayCount+1
 
         
 def printGrade():
     print("\n--------------------------------------------------------")
-    print(f"Max Color Probabilty: {maxColorPrediction/(255*255)}")   
-    print(f"Max Color Probablilty with Threshold: {((maxRedThreshold/maxRedTotal)+(maxGreenThreshold/maxGreenTotal)+(maxBlueThreshold/maxBlueTotal))/3}")
+    print(f"Max Color Probabilty: {maxColorPrediction/(256*256)}")   
+    
     print(f"Max Red Probabilty: {maxRedPrediction/maxRedTotal} -> {maxRedPrediction}/{maxRedTotal}")
     print(f"Max Green Probabilty: {maxGreenPrediction/maxGreenTotal} -> {maxGreenPrediction}/{maxGreenTotal}")
     print(f"Max Blue Probabilty: {maxBluePrediction/maxBlueTotal} -> {maxBluePrediction}/{maxBlueTotal}") 
-    print(f"Max Threshold Probabilty R: {maxRedThreshold/maxRedTotal} G: {maxGreenThreshold/maxGreenTotal} B: {maxBlueThreshold/maxBlueTotal} ")
+    #print(f"Color Threshold Met: {ThresholdMet/(256*256)} Threshold: {Threshold}")
+    print(f"GrayScale Met with Threshold: {GRAYCount/(256*256)} Threshold: {grayThresh} ")
+    print(f"GrayScale OPENCV comparision: {CVGrayCount/(256*256)} Threshold: {grayThresh}")
+    #print(f"Max Threshold Probabilty R: {maxRedThreshold/maxRedTotal} G: {maxGreenThreshold/maxGreenTotal} B: {maxBlueThreshold/maxBlueTotal} ")
     print("--------------------------------------------------------")         
 printGrade()   
 print(len(np.unique(out2,axis = 0)))
