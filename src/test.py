@@ -17,7 +17,6 @@ warnings.filterwarnings("ignore")
 gray = np.load(os.getcwd() + "\\gray_scale.npy")
 color = np.load(os.getcwd() + "\\ab1.npy")
 
-print(gray.shape)
 
 splitting_count = 500
 end_splitting_count = 1000
@@ -60,16 +59,17 @@ compile_optimizer = Adam(learning_rate = 0.001)
 compile_metrics = ["accuracy"]
 input_dim = (input_images.shape[1], input_images.shape[2], input_images.shape[3])
 
+#remove False once model behaves as expected
 if(os.path.exists('model.h5') and False):
-    Auto_Encoder = load_model('model.h5')
+    auto_encoder = load_model('model.h5')
 else:
-    Auto_Encoder.compile(loss = compile_loss, optimizer= compile_optimizer, metrics = compile_metrics)
-    Auto_Encoder.summary
-    Auto_Encoder_Model = Auto_Encoder.fit(input_images, output_images, epochs = 100, callbacks = [Early_Stopper, Checkpoint_Model], batch_size = 4)
-    Auto_Encoder.save('model.h5')
+    auto_encoder.compile(loss = compile_loss, optimizer= compile_optimizer, metrics = compile_metrics)
+    auto_encoder.summary
+    auto_encoder_model = auto_encoder.fit(input_images, output_images, epochs = 100, callbacks = [stopper, checkpoints], batch_size = 4)
+    auto_encoder.save('model.h5')
     
-predictions = Auto_Encoder.predict(input_images)
-test_predictions = Auto_Encoder.predict(test_input)
+predictions = auto_encoder.predict(input_images)
+test_predictions = auto_encoder.predict(test_input)
 
 def write_imgs(imgs, path, conv):
     if(not os.path.exists(path)):
