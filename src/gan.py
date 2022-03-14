@@ -160,7 +160,7 @@ for e in range( num_epochs ):
 y = generator( test_x[0 : ] ).numpy()
 
 for i in range(len(test_x)):
-  image = Image.fromarray( ( y[i] * 255 ).astype( 'uint8' ) ).resize( ( 1024 , 1024 ) )
+  image = Image.fromarray( ( y[i] * 255 ).astype( 'uint8' ) ).resize( ( 224 , 224 ) )
   image.save("out\\photo" + str(i) + ".JPG")
 
 # for i in range(1):
